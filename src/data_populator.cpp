@@ -3,11 +3,12 @@
 #include <cstdlib>   
 #include <ctime>     
 #include <sstream>   
+#include <string>
 
 int main(int argc, char* argv[]) 
 {
     if (argc < 2) {
-        std::cerr << "usage: " << argv[0] << " <number of random numbers> <optional:<output file name>>\n";
+        std::cerr << "usage: " << argv[0] << " <number of random numbers> <output file name>\n";
         return 1;
     }
 
@@ -18,12 +19,23 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    std::string filename;
+
+    if (argc >= 3) {
+        filename = argv[2];
+        if (filename.size() < 4 || filename.substr(filename.size() - 4) != ".txt") {
+            filename += ".txt";
+        }
+    } else {
+        filename = "data/generated_data.txt";
+    }
+
 
     std::srand(static_cast<unsigned int>(std::time(0)));
 
-    std::ofstream outfile("data/generated_data.txt");
+    std::ofstream outfile(filename);
     if (!outfile) {
-        std::cerr << "error: Could not open output file.\n";
+        std::cerr << "error: could not open output file.\n";
         return 1;
     }
 
@@ -35,7 +47,7 @@ int main(int argc, char* argv[])
     }
 
     outfile.close();  
-    std::cout << "successfully wrote " << n << " random numbers to 'generated_data.txt'\n";
+    std::cout << "successfully wrote " << n << " random numbers to " << filename << "\n";
 
     return 0;
 }
