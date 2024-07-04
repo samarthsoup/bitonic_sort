@@ -53,3 +53,42 @@ __global__ void bitonicSortGPU(int* arr, int j, int k)
         }
     }
 }
+
+void printArray(int* arr, int size) 
+{
+    for (int i = 0; i < size; ++i)
+        std::cout << arr[i] << " ";
+    std::cout << std::endl;
+}
+
+bool isSorted(int* arr, int size) 
+{
+    for (int i = 1; i < size; ++i) 
+    {
+        if (arr[i] < arr[i - 1])
+            return false;
+    }
+    return true;
+}
+
+bool isPowerOfTwo(int num) 
+{
+    return num > 0 && (num & (num - 1)) == 0;
+}
+
+int nextPowerOfTwo(int n) 
+{
+    if (n && !(n & (n - 1))) {
+        return n;
+    }
+    
+    n--;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n++;
+
+    return n;
+}
