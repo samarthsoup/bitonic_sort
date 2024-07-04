@@ -32,3 +32,24 @@ void bitonicSortCPU(int* arr, int n)
         }
     }
 }
+
+__global__ void bitonicSortGPU(int* arr, int j, int k)
+{
+    unsigned int i, ij;
+
+    i = threadIdx.x + blockDim.x * blockIdx.x;
+
+    ij = i ^ j;
+
+    if (ij > i) {
+        if ((i & k) == 0) {
+            if (arr[i] > arr[ij]) {
+                std::swap(arr[i], arr[ij]);
+            }
+        } else {
+            if (arr[i] < arr[ij]) {
+                std::swap(arr[i], arr[ij]);
+            }
+        }
+    }
+}
