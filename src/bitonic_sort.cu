@@ -1,7 +1,6 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include <cuda.h>
-#include <iostream>
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
@@ -14,10 +13,62 @@ const char* default_input_filename = "data/generated_data.txt";
 const char* default_output_filename = "data/output.txt";
 
 /*
-The bitonic sort is a favourable algorithm for implementation on parallel systems(i.e. gpu) because elements are compared in a 
-predefined sequence. The sequence of the comparisons has no effect on the result of the algorithm.  
+The bitonic sort is a favourable algorithm for implementation on parallel systems(i.e. gpu) because elements are 
+compared in a predefined sequence. The sequence of the comparisons has no effect on the result of the algorithm.  
 
+Taking an example to explain the algorithm implemented here,
+arr=[3,7,4,8,6,2,1,5]
 
+k=2,j=1,i=0,i^j=1: no swap
+k=2,j=1,i=1,i^j=0: no swap
+k=2,j=1,i=2,i^j=3: swapped! arr=[3,7,8,4,6,2,1,5]
+k=2,j=1,i=3,i^j=2: no swap
+k=2,j=1,i=4,i^j=5: swapped! arr=[3,7,8,4,2,6,1,5]
+k=2,j=1,i=5,i^j=4: no swap
+k=2,j=1,i=6,i^j=7: swapped! arr=[3,7,8,4,2,6,5,1]
+k=2,j=1,i=7,i^j=6: no swap
+
+k=4,j=2,i=0,i^j=2: no swap
+k=4,j=2,i=1,i^j=3: swapped! arr=[3,4,8,7,2,6,5,1]
+k=4,j=2,i=2,i^j=0: no swap
+k=4,j=2,i=3,i^j=1: no swap
+k=4,j=2,i=4,i^j=6: swapped! arr=[3,4,8,7,5,6,2,1]
+k=4,j=2,i=5,i^j=7: no swap
+k=4,j=2,i=6,i^j=4: no swap
+k=4,j=2,i=7,i^j=5: no swap
+k=4,j=1,i=0,i^j=1: no swap
+k=4,j=1,i=1,i^j=0: no swap
+k=4,j=1,i=2,i^j=3: swapped! arr=[3,4,7,8,5,6,2,1]
+k=4,j=1,i=3,i^j=2: no swap
+k=4,j=1,i=4,i^j=5: swapped! arr=[3,4,7,8,6,5,2,1]
+k=4,j=1,i=5,i^j=4: no swap
+k=4,j=1,i=6,i^j=7: no swap
+k=4,j=1,i=7,i^j=6: no swap
+
+k=8,j=4,i=0,i^j=4: no swap
+k=8,j=4,i=1,i^j=5: no swap
+k=8,j=4,i=2,i^j=6: swapped! arr=[3,4,2,8,6,5,7,1]
+k=8,j=4,i=3,i^j=7: swapped! arr=[3,4,2,1,6,5,7,8]
+k=8,j=4,i=4,i^j=0: no swap
+k=8,j=4,i=5,i^j=1: no swap
+k=8,j=4,i=6,i^j=2: no swap
+k=8,j=4,i=7,i^j=3: no swap
+k=8,j=2,i=0,i^j=2: swapped! arr=[2,4,3,1,6,5,7,8]
+k=8,j=2,i=1,i^j=3: swapped! arr=[2,1,3,4,6,5,7,8]
+k=8,j=2,i=2,i^j=0: no swap
+k=8,j=2,i=3,i^j=1: no swap
+k=8,j=2,i=4,i^j=6: no swap
+k=8,j=2,i=5,i^j=7: no swap
+k=8,j=2,i=6,i^j=4: no swap
+k=8,j=2,i=7,i^j=5: no swap
+k=8,j=1,i=0,i^j=1: swapped! arr=[1,2,3,4,6,5,7,8]
+k=8,j=1,i=1,i^j=0: no swap
+k=8,j=1,i=2,i^j=3: no swap
+k=8,j=1,i=3,i^j=2: no swap
+k=8,j=1,i=4,i^j=5: swapped! arr=[1,2,3,4,5,6,7,8]
+k=8,j=1,i=5,i^j=4: no swap
+k=8,j=1,i=6,i^j=7: no swap
+k=8,j=1,i=7,i^j=6: no swap
 
 */
 
@@ -144,7 +195,10 @@ int main(int argc, char* argv[])
     }
 
     if (!isPowerOfTwo(input_size)) {   
-        std::cout << "size provided is not a power of two, size will be the next power of two and remaining spots of the array will be padded with zeroes\nSize provided: " << input_size << std::endl;
+        std::cout << 
+        "size provided is not a power of two, size will be the next power of two and  
+        remaining spots of the array will be padded with zeroes\nsize provided: " 
+        << input_size << std::endl;
         size = nextPowerOfTwo(input_size);
         std::cout << "the nearest higher power of two is: " << size << std::endl;
     } else {
