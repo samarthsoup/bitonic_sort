@@ -185,10 +185,11 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    //first number in the file is the count of numbers
     int input_size = 0;
     infile >> input_size;
-
     int size;
+
     if (input_size <= 0) {
         std::cerr << "array size must be a positive integer\n";
         return 1;
@@ -206,11 +207,9 @@ int main(int argc, char* argv[])
     }
 
     int* arr = new int[size];
-    int* carr = new int[size];
-    int* temp = new int[size];
+    int* cpu_arr = new int[size];
 
-    int* gpuArrbiton;
-    int* gpuTemp;
+    int* gpu_arr;
 
     srand(static_cast<unsigned int>(time(nullptr)));
     for (int i = 0; i < input_size; ++i) {
@@ -219,20 +218,22 @@ int main(int argc, char* argv[])
             delete[] arr;
             return 1;
         }
-        carr[i] = arr[i];
+        cpu_arr[i] = arr[i];
     }
 
     infile.close();
 
+    //if input_size < size (in the case that input_size is not a power of two) we populate the remaining empty slots of the array with 0
     for (int i = input_size; i < size; ++i) {
         arr[i] = 0;
-        carr[i] = 0;
+        cpu_arr[i] = 0;
     }
 
-    cudaMalloc((void**)&gpuTemp, size * sizeof(int));
-    cudaMalloc((void**)&gpuArrbiton, size * sizeof(int));
+    //allocate memory on gpu 
+    cudaMalloc((void**)&gpu_arr, size * sizeof(int));
 
-    cudaMemcpy(gpuArrbiton, arr, size * sizeof(int), cudaMemcpyHostToDevice);
+    //copy arr[] onto the gpu in the form of gpu_arr[]
+    cudaMemcpy(gpu_arr, arr, size * sizeof(int), cudaMemcpyHostToDevice);
 
     cudaEvent_t startGPU, stopGPU;
     cudaEventCreate(&startGPU);
@@ -241,6 +242,7 @@ int main(int argc, char* argv[])
 
     clock_t startCPU, endCPU;
 
+    //threads per block and blocks per grid used for spawning the kernel 
     int threadsPerBlock = MAX_THREADS_PER_BLOCK;
     int blocksPerGrid = (size + threadsPerBlock - 1) / threadsPerBlock;
     int j, k;
@@ -248,17 +250,20 @@ int main(int argc, char* argv[])
     cudaEventRecord(startGPU);
     for (k = 2; k <= size; k <<= 1) {
         for (j = k >> 1; j > 0; j = j >> 1) {
-            bitonicSortGPU <<<blocksPerGrid, threadsPerBlock>>> (gpuArrbiton, j, k);
+            //using the gpu for only the innermost loop
+            bitonicSortGPU <<<blocksPerGrid, threadsPerBlock>>> (gpu_arr, j, k);
         }
     }
     cudaEventRecord(stopGPU);
 
-    cudaMemcpy(arr, gpuArrbiton, size * sizeof(int), cudaMemcpyDeviceToHost);
-    cudaEventSynchronize(stopGPU);
+    //load the sorted contents from gpu_arr[] into arr[] 
+    cudaMemcpy(arr, gpu_arr, size * sizeof(int), cudaMemcpyDeviceToHost);
+
+    cudaEventSynchronize(stopGPU); //wait for all gpu threads to finish their work
     cudaEventElapsedTime(&GPU_time_ms, startGPU, stopGPU);
 
     startCPU = clock();
-    bitonicSortCPU(carr, size);
+    bitonicSortCPU(cpu_arr, size);
     endCPU = clock();
 
     double CPU_time_ms = static_cast<double>(endCPU - startCPU) / (CLOCKS_PER_SEC / 1000.0);
@@ -268,7 +273,7 @@ int main(int argc, char* argv[])
     else
         std::cout << "sort checker: gpu array fail" << std::endl;
    
-    if (isSorted(carr, size))
+    if (isSorted(cpu_arr, size))
         std::cout << "sort checker: cpu array success" << std::endl;
     else
         std::cout << "sort checker: cpu array fail" << std::endl;
@@ -289,12 +294,10 @@ int main(int argc, char* argv[])
 
     outfile.close();
 
+    //free all the arrays created
     delete[] arr;
-    delete[] carr;
-    delete[] temp;
-
-    cudaFree(gpuArrbiton);
-    cudaFree(gpuTemp);
+    delete[] cpu_arr;
+    cudaFree(gpu_arr);
 
     return 0;
 }
