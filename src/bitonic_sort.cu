@@ -13,6 +13,7 @@
 const char* default_input_filename = "data/generated_data.txt";
 const char* default_output_filename = "data/output.txt";
 
+//implementation of the bitonic sort for the cpu
 void bitonicSortCPU(int* arr, int n) 
 {
     for (int k = 2; k <= n; k *= 2) {
@@ -36,6 +37,7 @@ void bitonicSortCPU(int* arr, int n)
     }
 }
 
+//implementation of the bitonic sort for the gpu
 __global__ void bitonicSortGPU(int* arr, int j, int k)
 {
     unsigned int i, ij;
@@ -64,6 +66,7 @@ void printArray(int* arr, int size)
     std::cout << std::endl;
 }
 
+//sort checker
 bool isSorted(int* arr, int size) 
 {
     for (int i = 1; i < size; ++i) 
@@ -74,11 +77,15 @@ bool isSorted(int* arr, int size)
     return true;
 }
 
+//is the integer provided a power of two
+//f(x) = true , if there exists an integer k such that x = 2^k
+//     = false, otherwise
 bool isPowerOfTwo(int num) 
 {
     return num > 0 && (num & (num - 1)) == 0;
 }
 
+//finds the next largest power of two for a given 16-bit integer
 int nextPowerOfTwo(int n) 
 {
     if (n && !(n & (n - 1))) {
