@@ -13,6 +13,14 @@
 const char* default_input_filename = "data/generated_data.txt";
 const char* default_output_filename = "data/output.txt";
 
+/*
+The bitonic sort is a favourable algorithm for implementation on parallel systems(i.e. gpu) because elements are compared in a 
+predefined sequence. The sequence of the comparisons has no effect on the result of the algorithm.  
+
+
+
+*/
+
 //implementation of the bitonic sort for the cpu
 void bitonicSortCPU(int* arr, int n) 
 {
@@ -78,8 +86,8 @@ bool isSorted(int* arr, int size)
 }
 
 //is the integer provided a power of two
-//f(x) = true , if there exists an integer k such that x = 2^k
-//     = false, otherwise
+//isPowerOfTwo(x) = true , if there exists an integer k such that x = 2^k
+//                = false, otherwise
 bool isPowerOfTwo(int num) 
 {
     return num > 0 && (num & (num - 1)) == 0;
@@ -108,6 +116,7 @@ int main(int argc, char* argv[])
     const char* input_filename = default_input_filename;
     const char* output_filename = default_output_filename;
 
+    //get input and output filenames through argv[] via flags
     for (int i = 1; i < argc; ++i) {
         if (std::strcmp(argv[i], "--input") == 0 && i + 1 < argc) {
             input_filename = argv[++i];
